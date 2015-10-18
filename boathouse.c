@@ -44,15 +44,20 @@
 #include "beep.h"
 #include "range.h"
 #include "dht_read.h"
+#include "ds18b20.h"
+#include "lightlevel.h"
 #include "transport.h"
 
 #define BeepPin 2 // Raspberry pi gpio27
 #define EchoPin 7 // Raspberry pi gpio4
 #define TriggerPin 0 // Raspberry pi gpio 17
-#define DHTPin 5 // GPIO 24
+#define DHTPin 5 // Rasberry pi gpio 24
+#define LightIntPin 6 // Rasberry pi gpio 25
 
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
+w1desc GndTempdDv;
+int LightDev;
 
 struct sockaddr_in servaddr;
 
@@ -89,6 +94,9 @@ pushlist_t pushlist[] = {
 { "TEMP",     TYPE_FLOAT,   &status.temp_f}, 
 { "DISTANCE", TYPE_FLOAT,   &status.distance_in},
 { "BEEPER",   TYPE_INTEGER, &status.beeper},
+{ "LIGHT",    TYPE_INTEGER, &status.light_l},
+{ "GNDTEMP",  TYPE_FLOAT,   &status.gndtemp_f},
+{ "MOTION",   TYPE_INTEGER, &status.motion},
 { "",         TYPE_NULL,    NULL} 
 };
 
@@ -98,6 +106,9 @@ commandlist_t device_commandlist[] = {
 { "GETDISTANCE",     "DISTANCE",     NULL,      TYPE_FLOAT,   &status.distance_in},
 { "GETBEEPER",       "BEEPER",       NULL,      TYPE_INTEGER, &status.beeper},
 { "DOMORSE",         "MORSE",        &morse,    TYPE_STRING,  NULL},
+{ "GETGNDTEMP",      "GNDTEMP",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
+{ "GETLIGHT",        "LIGHT",        NULL,      TYPE_INTEGER, &status.light_l},
+{ "GETMOTION",       "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
 { "SETSENSORPERIOD", "SENSORPERIOD", NULL,      TYPE_INTEGER, &sensor_period},
 { "EXIT",            "EXIT",         &app_exit, TYPE_INTEGER, &exitflag},
 { "",                "",             NULL,      TYPE_NULL,    NULL}
@@ -141,6 +152,14 @@ void measure( void )
 	pthread_mutex_lock(&lock);
 	status.distance_in = RangeMeasure(5);
 	pthread_mutex_unlock(&lock);
+	
+	pthread_mutex_lock(&lock);
+	Ds18b20ReadTemp(GndTempDev, &status.gndtemp_f, &temp_c);
+	pthread_mutex_unlock(&lock);
+	
+	pthread_mutex_lock(&lock);
+	status.light_l = LuxMeasure(LightDev);
+	pthread_mutex_unlock(&lock);
 		
 	pthread_mutex_lock(&lock);
 	dht_read_val(&status.temp_f, &temp_c, &status.humidity_pct);
@@ -179,6 +198,8 @@ int  main(void)
 	BeepInit(BeepPin, 0);
 	RangeInit(EchoPin, TriggerPin, 1);
 	dht_init(DHTPin);
+	Ds18b20Init(GndTempdDev);
+	LightDev = LuxInit(1, LightIntPin);
 	
 	iret1 = pthread_mutex_init(&lock, NULL); 
 	if(iret1)
