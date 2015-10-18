@@ -72,6 +72,9 @@ typedef struct
 	float temp_f;
 	float distance_in;
 	int beeper;
+	int light_l;
+	float gndtemp_f;
+	int motion;
 	char morse[80];
 } status_t;
 
