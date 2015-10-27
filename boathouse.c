@@ -252,6 +252,7 @@ int  main(void)
 	dht_init(DHTPin);
 	Ds18b20Init(GndTempdDev);
 	LightDev = LuxInit(1, LightIntPin);
+	PIRInit(PIRPin);
 	
 	iret1 = pthread_mutex_init(&lock, NULL); 
 	if(iret1)
