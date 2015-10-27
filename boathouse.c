@@ -20,8 +20,55 @@
  *
  *    You should have received a copy of the GNU Lesser General Public License
  *    along with wiringPi.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************
- */
+ ************************************************************************/
+ 
+/*****************************************************************************/
+/* Sensors:                                                                  */
+/*    light                                                                  */
+/*    PIR                                                                    */
+/*    beep                                                                   */
+/*    temp & humidity                                                        */
+/*    temp -2                                                                */
+/*    distance                                                               */
+/*                                                                           */
+/* Pin Mux:                                                                  */
+/*    Name   WPiPin   GPIO   PCB Terminal                                    */
+/*    3.3V                        1                                          */
+/*    gnd                         2                                          */
+/*    1W Temp  7        4         3                                          */
+/*    Beep     2        27        4                                          */
+/*    SDA Lux  3       pin3       5                                          */
+/*    SCL Lux  5       pin5       6                                          */
+/*    5.0V                        7                                          */
+/*    PIR      3        22        8                                          */
+/*    Echo     1        18        9                                          */
+/*    Trigger  0        17        10                                         */
+/*    3.3V                        11                                         */
+/*    gnd                         12                                         */
+/*    DHT      5        24        13                                         */
+/*    IntLux   6        25        14                                         */
+/*                                                                           */
+/* Wiring:                                                                   */
+/*    temp2  Pin       Wire Color                                            */
+/*           VCC       Orange                                                */
+/*           GND       Blue                                                  */
+/*           Data      Blue/White                                            */
+/*    lux                                                                    */
+/*           SDA       Orange                                                */
+/*           SCL       Green                                                 */
+/*           GND       White/Green, White/Orange, White/Brown, White/Blue    */
+/*           3V3       Blue                                                  */
+/*           Int       Brown                                                 */
+/*    PIR                                                                    */
+/*           VCC       Red                                                   */
+/*           GND       Black                                                 */
+/*           Out       Yellow                                                */
+/*    Distance                                                               */
+/*           VCC       Red                                                   */
+/*           Trigger   Yellow                                                */
+/*           Echo      Green                                                 */
+/*           GND       Black                                                 */
+/*****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -48,11 +95,11 @@
 #include "lightlevel.h"
 #include "transport.h"
 
-#define BeepPin 2 // Raspberry pi gpio27
-#define EchoPin 7 // Raspberry pi gpio4
-#define TriggerPin 0 // Raspberry pi gpio 17
-#define DHTPin 5 // Rasberry pi gpio 24
-#define LightIntPin 6 // Rasberry pi gpio 25
+#define BeepPin 2        // Raspberry pi gpio27
+#define EchoPin 7        // Raspberry pi gpio4
+#define TriggerPin 0     // Raspberry pi gpio 17
+#define DHTPin 5         // Raspberry pi gpio 24
+#define LightIntPin 6    // Raspberry pi gpio 25
 
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
