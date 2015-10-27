@@ -2,9 +2,9 @@
 CC=gcc
 CFLAGS=-c -Wall
 LDFLAGS=-lwiringPi -lpthread
-SOURCES=boathouse.c beep.c dht_read.c range.c transport.c lightlevel.c ds18b20.c
+SOURCES=boathouse.c beep.c dht_read.c range.c transport.c lightlevel.c pir.c ds18b20.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=sump
+EXECUTABLE=boathouse
 
 all: $(SOURCES) $(EXECUTABLE)
     

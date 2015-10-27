@@ -93,13 +93,15 @@
 #include "dht_read.h"
 #include "ds18b20.h"
 #include "lightlevel.h"
+#include "pir.h"
 #include "transport.h"
 
-#define BeepPin 2        // Raspberry pi gpio27
-#define EchoPin 7        // Raspberry pi gpio4
+#define BeepPin 2        // Raspberry pi gpio 27
+#define EchoPin 1        // Raspberry pi gpio 4
 #define TriggerPin 0     // Raspberry pi gpio 17
 #define DHTPin 5         // Raspberry pi gpio 24
 #define LightIntPin 6    // Raspberry pi gpio 25
+#define PIRPin 3         // Raspberry pi gpio 22
 
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
