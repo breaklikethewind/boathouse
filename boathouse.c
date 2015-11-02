@@ -1,5 +1,5 @@
 /*
- * sump.c:
+ * boathouse.c:
  *      This app manages the sump pump
  *
  *
@@ -105,7 +105,7 @@
 
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
-w1desc GndTempdDv;
+w1desc GndTempdDev;
 int LightDev;
 
 struct sockaddr_in servaddr;
@@ -113,7 +113,7 @@ struct sockaddr_in servaddr;
 int sockfd;
 int rtiUdpPort;
 /* This is unique per application instance and RTI driver instance */
-#define RTI_UDP_PORT 32001
+#define RTI_UDP_PORT 32002
 
 typedef struct
 {
@@ -148,7 +148,7 @@ pushlist_t pushlist[] = {
 { "BEEPER",   TYPE_INTEGER, &status.beeper},
 { "LIGHT",    TYPE_INTEGER, &status.light_l},
 { "GNDTEMP",  TYPE_FLOAT,   &status.gndtemp_f},
-{ "MOTION",   TYPE_INTEGER, &status.motion},
+//{ "MOTION",   TYPE_INTEGER, &status.motion},
 { "",         TYPE_NULL,    NULL} 
 };
 
@@ -160,7 +160,7 @@ commandlist_t device_commandlist[] = {
 { "DOMORSE",         "MORSE",        &morse,    TYPE_STRING,  NULL},
 { "GETGNDTEMP",      "GNDTEMP",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
 { "GETLIGHT",        "LIGHT",        NULL,      TYPE_INTEGER, &status.light_l},
-{ "GETMOTION",       "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
+//{ "GETMOTION",       "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
 { "SETSENSORPERIOD", "SENSORPERIOD", NULL,      TYPE_INTEGER, &sensor_period},
 { "EXIT",            "EXIT",         &app_exit, TYPE_INTEGER, &exitflag},
 { "",                "",             NULL,      TYPE_NULL,    NULL}
@@ -206,7 +206,7 @@ void measure( void )
 	pthread_mutex_unlock(&lock);
 	
 	pthread_mutex_lock(&lock);
-	Ds18b20ReadTemp(GndTempDev, &status.gndtemp_f, &temp_c);
+	Ds18b20ReadTemp(GndTempdDev, &status.gndtemp_f, &temp_c);
 	pthread_mutex_unlock(&lock);
 	
 	pthread_mutex_lock(&lock);
@@ -232,7 +232,7 @@ int  main(void)
 	int broadcast;
 	pthread_t sensor_sample;
 
-	printf("Sump Launch...\r\n");
+	printf("Boathouse Launch...\r\n");
 	// Setup GPIO's, Timers, Interrupts, etc
 	if (wiringPiSetup() == -1)
 		exit(1);
@@ -248,10 +248,10 @@ int  main(void)
 
 	// Initialize sensors
 	BeepInit(BeepPin, 0);
-	RangeInit(EchoPin, TriggerPin, 1);
+	RangeInit(EchoPin, TriggerPin, 0);
 	dht_init(DHTPin);
 	Ds18b20Init(GndTempdDev);
-	LightDev = LuxInit(1, LightIntPin);
+	LightDev = LuxInit(1, 0, LightIntPin);
 	PIRInit(PIRPin);
 	
 	iret1 = pthread_mutex_init(&lock, NULL); 

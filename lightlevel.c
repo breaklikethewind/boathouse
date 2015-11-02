@@ -37,6 +37,8 @@
 #include <wiringPiI2C.h>
 #include <errno.h>
 
+#include "lightlevel.h"
+
 // ALL COMMAND TSL2561
 // Default I2C RPI address in (0x39) = FLOAT ADDR (Slave) Other [(0x49) = VCC ADDR / (0x29) = GROUND ADDR]
 #define TSL2561_ADDR_LOW                      (0x29)
@@ -100,7 +102,6 @@ int getLux(int fd)
 
 int LuxInit(int port, int id, int intgpio)
 {
-   int lux;
    int filedesc;
 	
    if (id > 0)

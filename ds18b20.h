@@ -1,5 +1,5 @@
 /*
- * range.c:
+ * ds18b20.c:
  *      This app measures distance using HC-S04 transducer module
  *
  *	How to test:
@@ -28,8 +28,8 @@
  ***********************************************************************
  */
 
-#ifndef RANGE_H
-#define RANGE_H
+#ifndef DS18B20_H
+#define DS18B20_H
 
 typedef char w1desc[16];
 

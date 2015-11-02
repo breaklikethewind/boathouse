@@ -240,7 +240,8 @@ int RangeInit(int echopin, int triggerpin, int debug)
 
 double RangeMeasure(int average)
 {
-	unsigned int i, avgcnt;
+//	unsigned int i;
+	unsigned int avgcnt;
 	unsigned int feet, inch;
 	int err = 0;
 	unsigned int mode_repeat = 0;
@@ -261,21 +262,21 @@ double RangeMeasure(int average)
 				if (mode_verbose)
 				{
 					printf("Distance: %02i ft, %02i inch, avg: %02.02f", feet, inch, average_val);
-					for (i = 0; i < 40; i++) printf("\b");
+//					for (i = 0; i < 40; i++) printf("\b");
 				}
 				break;
 			case 1:
 				if (mode_verbose) 
 				{
 					printf("isr_error: No start pulse              ");
-					for (i = 0; i < 40; i++) printf("\b");
+//					for (i = 0; i < 40; i++) printf("\b");
 				}
 				break;
 			case 2:
 				if (mode_verbose)
 				{
 					printf("isr_error: Measurement out of range     "); 
-					for (i = 0; i < 40; i++) printf("\b");
+//					for (i = 0; i < 40; i++) printf("\b");
 				}
 				break;
 			default:

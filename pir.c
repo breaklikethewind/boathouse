@@ -10,14 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "pir.h"
+
 int pirpin;
-pirfunc int* callback;
+//pirfunc int* callback;
 
-void PIRInterrupt(void)
-{
-	state = PIRRead();
-}
+//void PIRInterrupt(void)
+//{
+//	state = PIRRead();
+//}
 
+#if 0
 int PIRRegisterCallback(pirfunc* func)
 {
 	if (func)
@@ -26,9 +29,12 @@ int PIRRegisterCallback(pirfunc* func)
 		pinMode(pirpin, INPUT);
 
 }
+#endif
 
 int PIRRead(void)
 {
+	int pirpin_state;
+	
 	pirpin_state = digitalRead(pirpin);
 	
 	return pirpin_state;
@@ -42,5 +48,4 @@ int PIRInit(int pin)
 
 	return 0;
 }
-
 
