@@ -147,7 +147,7 @@ pushlist_t pushlist[] = {
 { "DISTANCE", TYPE_FLOAT,   &status.distance_in},
 { "BEEPER",   TYPE_INTEGER, &status.beeper},
 { "LIGHT",    TYPE_INTEGER, &status.light_l},
-{ "GNDTEMP",  TYPE_FLOAT,   &status.gndtemp_f},
+{ "GROUNDT",  TYPE_FLOAT,   &status.gndtemp_f},
 //{ "MOTION",   TYPE_INTEGER, &status.motion},
 { "",         TYPE_NULL,    NULL} 
 };
@@ -158,7 +158,7 @@ commandlist_t device_commandlist[] = {
 { "GETDISTANCE",     "DISTANCE",     NULL,      TYPE_FLOAT,   &status.distance_in},
 { "GETBEEPER",       "BEEPER",       NULL,      TYPE_INTEGER, &status.beeper},
 { "DOMORSE",         "MORSE",        &morse,    TYPE_STRING,  NULL},
-{ "GETGNDTEMP",      "GNDTEMP",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
+{ "GETGROUNDT",      "GROUNDT",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
 { "GETLIGHT",        "LIGHT",        NULL,      TYPE_INTEGER, &status.light_l},
 //{ "GETMOTION",       "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
 { "SETSENSORPERIOD", "SENSORPERIOD", NULL,      TYPE_INTEGER, &sensor_period},
@@ -206,7 +206,7 @@ void measure( void )
 	pthread_mutex_unlock(&lock);
 	
 	pthread_mutex_lock(&lock);
-	Ds18b20ReadTemp(GndTempdDev, &status.gndtemp_f, &temp_c);
+	Ds18b20ReadTemp(GndTempdDev, &(status.gndtemp_f), &temp_c);
 	pthread_mutex_unlock(&lock);
 	
 	pthread_mutex_lock(&lock);
@@ -214,7 +214,8 @@ void measure( void )
 	pthread_mutex_unlock(&lock);
 		
 	pthread_mutex_lock(&lock);
-	dht_read_val(&status.temp_f, &temp_c, &status.humidity_pct);
+	dht_read_val(&(status.temp_f), &temp_c, &(status.humidity_pct));
+	printf("%f, %f\r\n", status.temp_f, status.humidity_pct);
 	
 	firstsampleflag = 1;
 	pthread_mutex_unlock(&lock);
