@@ -92,7 +92,7 @@
 #include "range.h"
 #include "dht_read.h"
 #include "ds18b20.h"
-#include "lightlevel.h"
+#include "tsl2561.h"
 #include "pir.h"
 #include "transport.h"
 
@@ -106,7 +106,7 @@
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
 w1desc GndTempdDev;
-int LightDev;
+TSL2561 light1 = TSL2561_INIT(1, TSL2561_ADDR_FLOAT);;
 
 struct sockaddr_in servaddr;
 
@@ -121,7 +121,9 @@ typedef struct
 	float temp_f;
 	float distance_in;
 	int beeper;
-	int light_l;
+	int light_visable;
+	int light_ir;
+	int light_lux;
 	float gndtemp_f;
 	int motion;
 	char morse[80];
@@ -146,7 +148,9 @@ pushlist_t pushlist[] = {
 { "TEMP",     TYPE_FLOAT,   &status.temp_f}, 
 { "DISTANCE", TYPE_FLOAT,   &status.distance_in},
 { "BEEPER",   TYPE_INTEGER, &status.beeper},
-{ "LIGHT",    TYPE_INTEGER, &status.light_l},
+{ "LIGHTIR",  TYPE_INTEGER, &status.light_ir},
+{ "LIGHTVIS", TYPE_INTEGER, &status.light_visable},
+{ "LIGHTLUX", TYPE_INTEGER, &status.light_lux},
 { "GROUNDT",  TYPE_FLOAT,   &status.gndtemp_f},
 //{ "MOTION",   TYPE_INTEGER, &status.motion},
 { "",         TYPE_NULL,    NULL} 
@@ -159,8 +163,10 @@ commandlist_t device_commandlist[] = {
 { "GETBEEPER",       "BEEPER",       NULL,      TYPE_INTEGER, &status.beeper},
 { "DOMORSE",         "MORSE",        &morse,    TYPE_STRING,  NULL},
 { "GETGROUNDT",      "GROUNDT",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
-{ "GETLIGHT",        "LIGHT",        NULL,      TYPE_INTEGER, &status.light_l},
-//{ "GETMOTION",       "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
+{ "GETLUX",          "LIGHTLUX",     NULL,      TYPE_INTEGER, &status.light_lux},
+{ "GETVIS",          "LIGHTVIS",     NULL,      TYPE_INTEGER, &status.light_visable},
+{ "GETLIR",          "LIGHTIR",      NULL,      TYPE_INTEGER, &status.light_ir},
+//{ "GETMOTION",     "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
 { "SETSENSORPERIOD", "SENSORPERIOD", NULL,      TYPE_INTEGER, &sensor_period},
 { "EXIT",            "EXIT",         &app_exit, TYPE_INTEGER, &exitflag},
 { "",                "",             NULL,      TYPE_NULL,    NULL}
@@ -199,6 +205,9 @@ void *thread_sensor_sample( void *ptr )
 void measure( void )
 {
 	float temp_c;
+	uint16_t visable;
+	uint16_t ir;
+	uint32_t lux;
 
 	// Fetch sensor data
 	pthread_mutex_lock(&lock);
@@ -210,15 +219,54 @@ void measure( void )
 	pthread_mutex_unlock(&lock);
 	
 	pthread_mutex_lock(&lock);
-	status.light_l = LuxMeasure(LightDev);
+	// sense the luminosity from the sensor (lux is the luminosity taken in "lux" measure units)
+	// the last parameter can be 1 to enable library auto gain, or 0 to disable it
+	TSL2561_SENSELIGHT(&light1, &visable, &ir, &lux, 1);
+	status.light_visable = visable;
+	status.light_ir = ir;
+	status.light_lux = lux;
 	pthread_mutex_unlock(&lock);
 		
 	pthread_mutex_lock(&lock);
 	dht_read_val(&(status.temp_f), &temp_c, &(status.humidity_pct));
-	printf("%f, %f\r\n", status.temp_f, status.humidity_pct);
 	
 	firstsampleflag = 1;
 	pthread_mutex_unlock(&lock);
+}
+
+int init_tsl2561(void)
+{
+	int rc;
+
+	// Load I2C kernel drivers
+	system("modprobe i2c_bcm2708");
+   	system("modprobe i2c_dev");
+
+	// prepare the sensor
+	// (the first parameter is the raspberry pi i2c master controller attached to the TSL2561, the second is the i2c selection jumper)
+	// The i2c selection address can be one of: TSL2561_ADDR_LOW, TSL2561_ADDR_FLOAT or TSL2561_ADDR_HIGH
+//	TSL2561 light1 = TSL2561_INIT(1, TSL2561_ADDR_FLOAT);
+	
+	// initialize the sensor
+	rc = TSL2561_OPEN(&light1);
+	if (rc != 0) 
+	{
+		fprintf(stderr, "Error initializing TSL2561 sensor (%s). Check your i2c bus (es. i2cdetect)\n", strerror(light1.lasterr));
+		// you don't need to TSL2561_CLOSE() if TSL2561_OPEN() failed, but it's safe doing it.
+		TSL2561_CLOSE(&light1);
+		return 1;
+	}
+	
+	// set the gain to 1X (it can be TSL2561_GAIN_1X or TSL2561_GAIN_16X)
+	// use 16X gain to get more precision in dark ambients, or enable auto gain below
+	rc = TSL2561_SETGAIN(&light1, TSL2561_GAIN_1X);
+	
+	// set the integration time 
+	// (TSL2561_INTEGRATIONTIME_402MS or TSL2561_INTEGRATIONTIME_101MS or TSL2561_INTEGRATIONTIME_13MS)
+	// TSL2561_INTEGRATIONTIME_402MS is slower but more precise, TSL2561_INTEGRATIONTIME_13MS is very fast but not so precise
+	rc = TSL2561_SETINTEGRATIONTIME(&light1, TSL2561_INTEGRATIONTIME_101MS);
+
+	return rc;
 }
 
 /*
@@ -252,7 +300,7 @@ int  main(void)
 	RangeInit(EchoPin, TriggerPin, 0);
 	dht_init(DHTPin);
 	Ds18b20Init(GndTempdDev);
-	LightDev = LuxInit(1, 0, LightIntPin);
+	init_tsl2561();
 	PIRInit(PIRPin);
 	
 	iret1 = pthread_mutex_init(&lock, NULL); 
@@ -285,12 +333,13 @@ int  main(void)
 	
 	while (!exitflag) sleep(0);
 	
-	printf("Sump Exit Set...\r\n");
+	printf("Boathouse Exit Set...\r\n");
 	
 	// Exit	
 	tp_stop_handlers();
 	pthread_join(sensor_sample, NULL);
 	pthread_mutex_destroy(&lock);
+	TSL2561_CLOSE(&light1);
 
 	BeepMorse(5, "Exit");
 	
