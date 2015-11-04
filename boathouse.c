@@ -106,7 +106,7 @@
 #define DEFAULT_SENSOR_PERIOD 60 // Seconds
 
 w1desc GndTempdDev;
-TSL2561 light1 = TSL2561_INIT(1, TSL2561_ADDR_FLOAT);;
+TSL2561 light1 = TSL2561_INIT(1, TSL2561_ADDR_FLOAT);
 
 struct sockaddr_in servaddr;
 
@@ -140,6 +140,7 @@ void measure(void);
 
 typedef int (*cmdfunc)(char* request, char* response);
 
+int get_motion(char* request, char* response);
 int morse(char* request, char* response); 
 int app_exit(char* request, char* response);
 
@@ -152,25 +153,39 @@ pushlist_t pushlist[] = {
 { "LIGHTVIS", TYPE_INTEGER, &status.light_visable},
 { "LIGHTLUX", TYPE_INTEGER, &status.light_lux},
 { "GROUNDT",  TYPE_FLOAT,   &status.gndtemp_f},
-//{ "MOTION",   TYPE_INTEGER, &status.motion},
+{ "MOTION",   TYPE_INTEGER, &status.motion},
 { "",         TYPE_NULL,    NULL} 
 };
 
 commandlist_t device_commandlist[] = { 
-{ "GETHUMIDITY",     "HUMIDITY",     NULL,      TYPE_FLOAT,   &status.humidity_pct}, 
-{ "GETTEMP",         "TEMP",         NULL,      TYPE_FLOAT,   &status.temp_f}, 
-{ "GETDISTANCE",     "DISTANCE",     NULL,      TYPE_FLOAT,   &status.distance_in},
-{ "GETBEEPER",       "BEEPER",       NULL,      TYPE_INTEGER, &status.beeper},
-{ "DOMORSE",         "MORSE",        &morse,    TYPE_STRING,  NULL},
-{ "GETGROUNDT",      "GROUNDT",      NULL,      TYPE_FLOAT,   &status.gndtemp_f},
-{ "GETLUX",          "LIGHTLUX",     NULL,      TYPE_INTEGER, &status.light_lux},
-{ "GETVIS",          "LIGHTVIS",     NULL,      TYPE_INTEGER, &status.light_visable},
-{ "GETLIR",          "LIGHTIR",      NULL,      TYPE_INTEGER, &status.light_ir},
-//{ "GETMOTION",     "MOTION",       NULL,      TYPE_INTEGER, &status.motion},
-{ "SETSENSORPERIOD", "SENSORPERIOD", NULL,      TYPE_INTEGER, &sensor_period},
-{ "EXIT",            "EXIT",         &app_exit, TYPE_INTEGER, &exitflag},
-{ "",                "",             NULL,      TYPE_NULL,    NULL}
+{ "GETHUMIDITY",     "HUMIDITY",     NULL,        TYPE_FLOAT,   &status.humidity_pct}, 
+{ "GETTEMP",         "TEMP",         NULL,        TYPE_FLOAT,   &status.temp_f}, 
+{ "GETDISTANCE",     "DISTANCE",     NULL,        TYPE_FLOAT,   &status.distance_in},
+{ "GETBEEPER",       "BEEPER",       NULL,        TYPE_INTEGER, &status.beeper},
+{ "DOMORSE",         "MORSE",        &morse,      TYPE_STRING,  NULL},
+{ "GETGROUNDT",      "GROUNDT",      NULL,        TYPE_FLOAT,   &status.gndtemp_f},
+{ "GETLUX",          "LIGHTLUX",     NULL,        TYPE_INTEGER, &status.light_lux},
+{ "GETVIS",          "LIGHTVIS",     NULL,        TYPE_INTEGER, &status.light_visable},
+{ "GETLIR",          "LIGHTIR",      NULL,        TYPE_INTEGER, &status.light_ir},
+{ "GETMOTION",       "MOTION",       &get_motion, TYPE_INTEGER, &status.motion},
+{ "SETSENSORPERIOD", "SENSORPERIOD", NULL,        TYPE_INTEGER, &sensor_period},
+{ "EXIT",            "EXIT",         &app_exit,   TYPE_INTEGER, &exitflag},
+{ "",                "",             NULL,        TYPE_NULL,    NULL}
 };
+
+void motion_interrupt(void)
+{
+	status.motion = PIRRead();
+	tp_force_data_push();
+}
+
+int get_motion(char* request, char* response)
+{
+	status.motion = PIRRead();
+	sprintf(response, "%u", status.motion);
+	
+	return 0;
+}
  
 int morse(char* request, char* response) 
 {
@@ -229,6 +244,10 @@ void measure( void )
 		
 	pthread_mutex_lock(&lock);
 	dht_read_val(&(status.temp_f), &temp_c, &(status.humidity_pct));
+	pthread_mutex_unlock(&lock);
+		
+	pthread_mutex_lock(&lock);
+	status.motion = PIRRead();
 	
 	firstsampleflag = 1;
 	pthread_mutex_unlock(&lock);
@@ -302,6 +321,8 @@ int  main(void)
 	Ds18b20Init(GndTempdDev);
 	init_tsl2561();
 	PIRInit(PIRPin);
+
+	PIRRegisterCallback(&motion_interrupt);
 	
 	iret1 = pthread_mutex_init(&lock, NULL); 
 	if(iret1)

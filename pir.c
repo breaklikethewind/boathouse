@@ -12,24 +12,22 @@
 
 #include "pir.h"
 
-int pirpin;
-//pirfunc int* callback;
+int pirpin = -1;
 
-//void PIRInterrupt(void)
-//{
-//	state = PIRRead();
-//}
-
-#if 0
-int PIRRegisterCallback(pirfunc* func)
+int PIRRegisterCallback(pirfunc func)
 {
-	if (func)
-		wiringPiISR (pirpin, INT_EDGE_BOTH, &PIRInterrupt);
+	int retval;
+	
+	if ( func && (pirpin > 0) )
+	{
+		wiringPiISR(pirpin, INT_EDGE_BOTH, func);
+		retval = 0;
+	}
 	else // NULL
-		pinMode(pirpin, INPUT);
-
+		retval = -1;
+	
+	return retval;
 }
-#endif
 
 int PIRRead(void)
 {
