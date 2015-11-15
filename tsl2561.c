@@ -494,7 +494,7 @@ int TSL2561_INTR_LOW_THRESHOLD(TSL2561 *sensor, uint16_t threshold)
 	
 	rc = tsl2561_write16(sensor, TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_REGISTER_THRESHHOLDL_LOW, threshold);
 
-	if (rc != 0) { // invalid read or sensor error
+	if (rc != 0) // invalid read or sensor error
 		return -1;
 	else
 		return 0;
@@ -506,7 +506,7 @@ int TSL2561_INTR_HIGH_THRESHOLD(TSL2561 *sensor, uint16_t threshold)
 	
 	rc = tsl2561_write16(sensor, TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_REGISTER_THRESHHOLDH_LOW, threshold);
 
-	if (rc != 0) { // invalid read or sensor error
+	if (rc != 0) // invalid read or sensor error
 		return -1;
 	else
 		return 0;
@@ -523,7 +523,7 @@ int TSL2561_INTR_SETCLEAR(TSL2561 *sensor, tsl2561InterruptControl_t mode, uint8
 	
 	rc = tsl2561_write8(sensor, TSL2561_COMMAND_BIT | TSL2561_CLEAR_BIT | TSL2561_REGISTER_INTERRUPT, value);
 
-	if (rc != 0) { // invalid read or sensor error
+	if (rc != 0) // invalid read or sensor error
 		return -1;
 	else
 		return 0;
