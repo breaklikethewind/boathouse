@@ -114,6 +114,28 @@ static inline int tsl2561_write8(TSL2561 *sensor, uint8_t reg, uint32_t byte_val
 	}
 	return 0;
 }
+
+/**
+ * write one word to i2c bus getting
+ */
+static inline int tsl2561_write16(TSL2561 *sensor, uint8_t reg, uint32_t word_value) {
+	if(sensor->adapter_fd == -1) { // not opened
+		// TODO: choose a valid errno error
+		sensor->lasterr = -1;
+		return -1;
+	}
+	
+	// we mask with (& 0xFF) to get the last 8 bits from a 32 bit unsigned integer
+	sensor->buf[0] = reg;
+	sensor->buf[1] = ((word_value >> 0) & 0x00FF );
+	sensor->buf[2] = ((word_value >> 8) & 0x00FF );
+	if(write(sensor->adapter_fd, sensor->buf, 3) != 3) {
+		sensor->lasterr = errno;
+		return -1;
+	}
+	return 0;
+}
+
 // TSL2561 Functions (inspired on Adafruit_TSL2561_U.cpp at https://github.com/adafruit/Adafruit_TSL2561)
 // wake up TSL2561 by setting the control bit
 static inline int TSL2561_ON(TSL2561 *sensor) {
@@ -465,4 +487,47 @@ int TSL2561_SENSELIGHT(TSL2561 *sensor, uint16_t *full_spectrum, uint16_t *infra
 	*lux = TSL2561_CALCULATE_LUX(sensor, *full_spectrum, *infrared);
 	return 0;
 }
+
+int TSL2561_INTR_LOW_THRESHOLD(TSL2561 *sensor, uint16_t threshold)
+{
+	int rc;
+	
+	rc = tsl2561_write16(sensor, TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_REGISTER_THRESHHOLDL_LOW, threshold);
+
+	if (rc != 0) { // invalid read or sensor error
+		return -1;
+	else
+		return 0;
+}
+
+int TSL2561_INTR_HIGH_THRESHOLD(TSL2561 *sensor, uint16_t threshold)
+{
+	int rc;
+	
+	rc = tsl2561_write16(sensor, TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_REGISTER_THRESHHOLDH_LOW, threshold);
+
+	if (rc != 0) { // invalid read or sensor error
+		return -1;
+	else
+		return 0;
+}
+
+// This function both clears any pending interrupts, as well as configures the next interrupt
+int TSL2561_INTR_SETCLEAR(TSL2561 *sensor, tsl2561InterruptControl_t mode, uint8_t persistence)
+{
+	int rc;
+	uint8_t value;
+	
+	value = persistence;
+	value |= mode << 4;
+	
+	rc = tsl2561_write8(sensor, TSL2561_COMMAND_BIT | TSL2561_CLEAR_BIT | TSL2561_REGISTER_INTERRUPT, value);
+
+	if (rc != 0) { // invalid read or sensor error
+		return -1;
+	else
+		return 0;
+}
+
+
 

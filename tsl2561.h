@@ -169,6 +169,14 @@ enum
 
 typedef enum
 {
+  TSL2561_INTR_DISABLE              = 0x00,
+  TSL2561_INTR_LEVEL                = 0x01,
+  TSL2561_INTR_SMB                  = 0x02,
+  TSL2561_INTR_TEST                 = 0x03
+} tsl2561InterruptControl_t;
+
+typedef enum
+{
   TSL2561_INTEGRATIONTIME_13MS      = 0x00,    // 13.7ms
   TSL2561_INTEGRATIONTIME_101MS     = 0x01,    // 101ms
   TSL2561_INTEGRATIONTIME_402MS     = 0x02     // 402ms
@@ -235,5 +243,20 @@ int TSL2561_SETGAIN(TSL2561 *sensor, tsl2561Gain_t gain);
  * the TSL2561_SETINTEGRATIONTIME() and TSL2561_SETGAIN() functions. It autogain is 1 and automatic gain adjustment alghoritm is used
  */
 int TSL2561_SENSELIGHT(TSL2561 *sensor, uint16_t *full_spectrum, uint16_t *infrared, uint32_t *lux, int autogain);
+/**
+ * Set the interrupt low threshold value.
+ * Returns 0 on success, -1 on errors.
+ */
+int TSL2561_INTR_LOW_THRESHOLD(TSL2561 *sensor, uint16_t threshold);
+/**
+ * Set the interrupt high threshold value.
+ * Returns 0 on success, -1 on errors.
+ */
+int TSL2561_INTR_HIGH_THRESHOLD(TSL2561 *sensor, uint16_t threshold);
+/**
+ * This function both clears any pending interrupts, as well as configures the next interrupt.
+ * Returns 0 on success, -1 on errors.
+ */
+int TSL2561_INTR_SETCLEAR(TSL2561 *sensor, tsl2561InterruptControl_t mode, uint8_t persistence);
 
 #endif
