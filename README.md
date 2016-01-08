@@ -1,5 +1,5 @@
 
-sump pump monitoring software written by Eric Nelson
+Raspberry PI/RTI monitoring software written by Eric Nelson
 
 This program uses a raspberry pi to take temperature, humidity, and distance
 measurements of a sump pit. That data is sent to an RTI XP processor for 
