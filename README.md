@@ -65,3 +65,7 @@ In addition to the two way strings driver, you will want to use the
 variables reach specific limits, or when the PI sends an asynchronous event (such
 as a PIR motion event).
 
+This source code makes use of the "WiringPi" library found at:
+https://projects.drogon.net/raspberry-pi/wiringpi/
+
+
