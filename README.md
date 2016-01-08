@@ -18,7 +18,16 @@ sensor.
 range.c
 This is a driver to read an HC-SR04 ultrasonic range module.
 
-sump.c
+ds18b20.c
+This is a driver to read temperature from a 1 wire ds18b20 sensor.
+
+tsl2561.c
+This is a driver to read the ambient light level from a tsl2561 sensor.
+
+pir.c
+This driver reads data from a PIR sensor connected to a GPIO line on the PI.
+
+boathouse.c
 This is the main program entry point.
 
 transport.c
@@ -40,7 +49,15 @@ arrives. The push table defines what periodic data is sent to the processor.
 
 On the RTI processor two way strings driver, you must define the tag strings from
 the push list, and the command strings from the tags in the command list. The 
-full command list consists of tags defined in your application (sump.c in this case),
+full command list consists of tags defined in your application (boathouse.c in this case),
 and tags defined in transport.c.
 
+In the two way strings driver you must define "PAIR", and "SEQUENCENUMBER". These two
+strings are used to manage when the PI is connected to the XP8s, and how many
+messages have been sent from the PI to the XP8s.
+
+In addition to the two way strings driver, you will want to use the 
+"System Variable Events" driver to trigger XP8 macros to run when two way string
+variables reach specific limits, or when the PI sends an asynchronous event (such
+as a PIR motion event).
 
