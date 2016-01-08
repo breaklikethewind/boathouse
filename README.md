@@ -34,6 +34,10 @@ transport.c
 This controls the communication to the RTI processor. The communciation
 uses the RTI driver "two way strings".
 
+example_system.rti
+This is an example of how to setup an XP8s processor to communicate with
+the raspberry pi. This system configuration was stripped out of a larger
+working system configuration. This file is for documentation purposes only.
 
 Each driver, and transport.c are designed to be self contained re-usable
 modules for other programs. 
