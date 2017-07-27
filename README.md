@@ -68,4 +68,15 @@ as a PIR motion event).
 This source code makes use of the "WiringPi" library found at:
 https://projects.drogon.net/raspberry-pi/wiringpi/
 
+To enable 1 wire, edit rasbpi /boot/config.txt. Add the line:
+dtoverlay=w1-gpio-pullup,gpiopin=4
+
+To enable I2C, edit raspi /boot/config.txt. Add the line:
+dtparam=i2c_arm=on
+
+To enable auto-launch at boot, edit /etc/rc.local. Add the line:
+# Launch the boathouse app
+printf "Launching the boathouse app...\n"
+/home/pi/repos/boathouse/boathouse &
+
 
