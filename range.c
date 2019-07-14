@@ -39,6 +39,9 @@
 #include <sys/mman.h>
 #include "range.h"
 
+#define VERBOSE
+#undef VERBOSE
+
 // Use this define for Raspberry PI A, B, B+
 #define ARMV6
 // Use this define for Raspberry PI B2
@@ -87,7 +90,9 @@
 
 #define TRIGGER_PULSE_US 10 // Minimum HC-S04 trigger pulse time
 #define MAX_DISTANCE_US 23307 // Max distance of HC-S04 in terms of time
-#define MIN_TOTAL_MEASURE_TIME_US 75000 // Minimum HC-S04 measurement time is 60ms
+#define MIN_TOTAL_MEASURE_TIME_USSOUND_SPEED_ZERO_DEGREES_INCH_PER_SECOND 75000 // Minimum HC-S04 measurement time is 60ms
+#define SOUND_SPEED_ZERO_DEGREES_INCH_PER_SECOND 13043.281 // Speed of sound in inches per second at STP
+#define SOUND_SPEED_60_DEGREES_INCH_PER_SECOND 13385.8 // Speed of sound in inches per second at SP
 
 int EchoPin;
 int TriggerPin;
@@ -159,13 +164,14 @@ int setup_timer()
 	return(0);
 }
 
-int TakeMeasurement(unsigned int* feet, unsigned int* inch)
+int TakeMeasurement(unsigned int* feet, unsigned int* inch, int temp_f)
 {
 	unsigned int err;
 	unsigned int timend;
 	unsigned int isrtime;
 	unsigned int measureend;
 	unsigned int inches;
+	double distancetime_s;
 
 	// Get ready to catch interrupt
 	isr_time_ready = 0;
@@ -174,7 +180,7 @@ int TakeMeasurement(unsigned int* feet, unsigned int* inch)
 	isr_falltime = 0;
 	isr_error = 0;
 	timend = 0;
-	measureend = *timer + MIN_TOTAL_MEASURE_TIME_US;
+	measureend = *timer + MIN_TOTAL_MEASURE_TIME_USSOUND_SPEED_ZERO_DEGREES_INCH_PER_SECOND;
 
 	// Trigger the transducer for TRIGGER_PULSE_US	
 	digitalWrite(TriggerPin, HIGH);
@@ -196,7 +202,14 @@ int TakeMeasurement(unsigned int* feet, unsigned int* inch)
 	else if (isrtime < (TRIGGER_PULSE_US + MAX_DISTANCE_US))
 	{
 		// Calculate the distance in SAE units
-		inches = isr_distancetime / 148;
+		
+		//inches = isr_distancetime / 148; (inches at ambient temp)
+
+		distancetime_s = (double)isr_distancetime / 1000000.0; // isr_distancetime is in us convert to seconds for following equation		
+		inches = distancetime_s * (SOUND_SPEED_ZERO_DEGREES_INCH_PER_SECOND + 0.606 * (((double)temp_f - 32.0) / 1.8) * 0.5) * 0.5;
+		
+		//printf("isr_distancetime: %02i, distancetime_s: %.06f, temp_f: %02i, inches: %02i\r\n", isr_distancetime, distancetime_s, temp_f, inches);
+
 		*feet = inches / 12;
 		*inch = inches % 12;
 		err = 0;
@@ -238,9 +251,11 @@ int RangeInit(int echopin, int triggerpin, int debug)
 	return err;
 }
 
-double RangeMeasure(int average)
+double RangeMeasure(int average, int temp_f)
 {
-//	unsigned int i;
+#ifdef VERBOSE
+	unsigned int i;
+#endif
 	unsigned int avgcnt;
 	unsigned int feet, inch;
 	int err = 0;
@@ -252,7 +267,7 @@ double RangeMeasure(int average)
 		(avgcnt <= average) /* && (!exitpin_exit) */; 
 		(mode_repeat) ? avgcnt:avgcnt++)
 	{
-		err = TakeMeasurement(&feet, &inch);
+		err = TakeMeasurement(&feet, &inch, temp_f);
 		 	
 		// Check for an err
 		switch(err)
@@ -262,21 +277,27 @@ double RangeMeasure(int average)
 				if (mode_verbose)
 				{
 					printf("Distance: %02i ft, %02i inch, avg: %02.02f", feet, inch, average_val);
-//					for (i = 0; i < 40; i++) printf("\b");
+#ifdef VERBOSE
+					for (i = 0; i < 40; i++) printf("\b");
+#endif
 				}
 				break;
 			case 1:
 				if (mode_verbose) 
 				{
 					printf("isr_error: No start pulse              ");
-//					for (i = 0; i < 40; i++) printf("\b");
+#ifdef VERBOSE
+					for (i = 0; i < 40; i++) printf("\b");
+#endif
 				}
 				break;
 			case 2:
 				if (mode_verbose)
 				{
 					printf("isr_error: Measurement out of range     "); 
-//					for (i = 0; i < 40; i++) printf("\b");
+#ifdef VERBOSE
+					for (i = 0; i < 40; i++) printf("\b");
+#endif
 				}
 				break;
 			default:

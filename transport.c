@@ -99,7 +99,7 @@ int pair(char* request, char* response)
 {
 	char* junk;
 
-	printf("pair request=%s,reqlen=%d\r\n", request, strlen(request));
+	printf("pair request=%s,reqlen=%d\r\n", request, (int)strlen(request));
 	transport.paired = strtol(request, &junk, 0);
 	sprintf(response, "%u", transport.paired);
 	
@@ -108,7 +108,7 @@ int pair(char* request, char* response)
 	else
 		printf("Un-paired\r\n");
 	
-	printf("pair request=%s,reqlen=%d,response=%s\n", request, strlen(request), response);
+	printf("pair request=%s,reqlen=%d,response=%s\n", request, (int)strlen(request), response);
 	return 0;
 }
 
@@ -276,7 +276,8 @@ void *thread_data_push(void *ptr)
 
 	memset(&alladdr, 0, sizeof(alladdr));
 	alladdr.sin_family = AF_INET;
-	alladdr.sin_addr.s_addr = inet_addr("192.168.1.255");
+//	alladdr.sin_addr.s_addr = inet_addr("192.168.1.255");
+	alladdr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 	alladdr.sin_port = htons(rtiUdpPort);
 
 	pushlist = (pushlist_t*)ptr;

@@ -226,10 +226,6 @@ void measure( void )
 
 	// Fetch sensor data
 	pthread_mutex_lock(&lock);
-	status.distance_in = RangeMeasure(5);
-	pthread_mutex_unlock(&lock);
-	
-	pthread_mutex_lock(&lock);
 	Ds18b20ReadTemp(GndTempdDev, &(status.gndtemp_f), &temp_c);
 	pthread_mutex_unlock(&lock);
 	
@@ -246,6 +242,10 @@ void measure( void )
 	dht_read_val(&(status.temp_f), &temp_c, &(status.humidity_pct));
 	pthread_mutex_unlock(&lock);
 		
+	pthread_mutex_lock(&lock);
+	status.distance_in = RangeMeasure(5, status.temp_f);
+	pthread_mutex_unlock(&lock);
+	
 	pthread_mutex_lock(&lock);
 	status.motion = PIRRead();
 	

@@ -32,7 +32,7 @@
 #define RANGE_H
 
 int RangeInit(int echopin, int triggerpin, int debug);
-double RangeMeasure(int average);
+double RangeMeasure(int average, int temp_f);
 
 #endif
 
