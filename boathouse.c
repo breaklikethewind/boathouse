@@ -352,8 +352,10 @@ int  main(void)
 
 	BeepMorse(5, "OK");
 	
-	while (!exitflag) sleep(0);
-	
+	//while (!exitflag) sleep(0);
+	tp_join();
+	exitflag = 1;
+
 	printf("Boathouse Exit Set...\r\n");
 	
 	// Exit	
